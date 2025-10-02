@@ -2,7 +2,16 @@
 
 ## Overview
 
-The Pre Purchase Inspection feature is a Discord bot functionality that allows users to receive pricing quotes for devices they're considering purchasing through a guided thread-based interaction. The bot uses AI and device catalog integration to analyze device descriptions and provide three pricing scenarios: AS IS purchase, FIXED purchase, and repair service options.
+The Pre Purchase Inspection feature is a Discord bot functionality that allows users to receive pricing quotes for devices they're considering purchasing through a guided thread-based interaction. The bot uses AI and device catalog integration via the Management Hub to analyze device descriptions and provide three pricing scenarios: AS IS purchase, FIXED purchase, and repair service options.
+
+## Management Hub Integration
+
+The bot integrates with the Cellzier Management Hub, a web-based dashboard that provides device catalog management and pricing data:
+
+- **Management Hub URL**: `https://zrlwzphylf.execute-api.ap-southeast-2.amazonaws.com/admin/devices`
+- **Purpose**: Centralized device catalog with pricing tiers and fault repair cost data
+- **Data Source**: Contains device models, condition-based pricing, and repair cost estimates
+- **Access**: Backend API integration for real-time pricing retrieval
 
 ## Permission Requirements
 
@@ -61,9 +70,17 @@ The Pre Purchase Inspection feature is a Discord bot functionality that allows u
   - Specific faults and issues mentioned
 
 #### 6.3 Device Catalog Search
-- Searches backend device catalog using extracted information
-- Attempts to find matching device with pricing data
-- Retrieves condition-based pricing tiers and fault repair costs
+- Searches backend device catalog using extracted information via Management Hub API
+- **API Endpoint**: `https://zrlwzphylf.execute-api.ap-southeast-2.amazonaws.com/admin/devices`
+- Attempts to find matching device with pricing data from the management dashboard
+- Retrieves condition-based pricing tiers and fault repair costs stored in the hub
+- Accesses comprehensive fault data for each device model including:
+  - Screen replacement costs
+  - Battery replacement costs
+  - Back glass repair costs
+  - Camera repair costs
+  - Speaker/audio repair costs
+  - Logic board repair costs
 - Handles catalog connection errors and device not found scenarios
 
 #### 6.4 Condition Assessment
@@ -110,6 +127,11 @@ The Pre Purchase Inspection feature is a Discord bot functionality that allows u
 - Thread remains open for additional questions and clarifications
 - Users can provide more details to refine pricing estimates
 - Bot encourages follow-up: "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
+- **Improved Follow-up Handling**:
+  - Bot automatically detects follow-up messages vs initial messages
+  - Follow-up messages trigger refined quote generation with message "Analyzing your additional information and updating the quote..."
+  - All previous messages are combined for comprehensive analysis
+  - Thread status is properly reset to continue accepting messages
 
 ### 9. Error Handling
 
@@ -140,11 +162,12 @@ graph TD
     O --> P[Create pricing embed]
     P --> Q[Add interactive view]
     Q --> R[Send pricing quote]
-    R --> S[Prompt for follow-up questions]
-    S --> T{User asks follow-up?}
-    T -->|Yes| U[Process additional info]
-    T -->|No| V[Thread remains open]
-    U --> I
+    R --> S[Reset thread status to collecting]
+    S --> T[Prompt for follow-up questions]
+    T --> U{User asks follow-up?}
+    U -->|Yes| V[Process additional info and combine with previous messages]
+    U -->|No| W[Thread remains open]
+    V --> I
 ```
 
 ## Message Templates
@@ -171,7 +194,8 @@ The more details you provide, the more accurate our pricing quote will be!
 
 ### Thread Responses
 
-- **Processing acknowledgment**: `"Analyzing your device information and generating pricing quote..."`
+- **Initial processing acknowledgment**: `"Analyzing your device information and generating pricing quote..."`
+- **Follow-up processing acknowledgment**: `"Analyzing your additional information and updating the quote..."`
 - **Thread welcome**: `"{user_mention} Tell us about your phone in the next message.\n\nYou can refer to the guidance below for more details."`
 - **Follow-up prompt**: `"💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."`
 - **Based on message**: `"**Based on your description:** {user_device_description}"`
@@ -318,6 +342,9 @@ but no response. Screen looks fine but completely dead.
      ```
 5. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
 
+**Screenshot Example:**
+![Pre-Purchase Inspection Dead Device Example](pre_purchase_inspection_img1.png)
+
 ### Example 4: Device Not in Catalog
 
 **User Input**:
@@ -396,7 +423,7 @@ What if the battery health was lower, like 75%?
 
 **Bot Response**:
 1. ✅ reaction on message
-2. "Analyzing your device information and generating pricing quote..."
+2. "Analyzing your additional information and updating the quote..."
 3. **Updated pricing quote** with adjusted scenarios:
    - AS IS price slightly reduced due to battery condition
    - FIXED price includes battery replacement cost
@@ -413,15 +440,16 @@ What if the battery health was lower, like 75%?
 
 ## Current Limitations
 
-1. **Catalog Dependency**: Requires backend device catalog service for accurate pricing
+1. **Catalog Dependency**: Requires Management Hub API service for accurate pricing
 2. **AI Accuracy**: Device information extraction may not be 100% accurate
 3. **Estimation Only**: All prices are estimates subject to physical inspection
-4. **Limited Device Support**: Only devices in catalog receive accurate pricing
-5. **Network Dependency**: Requires stable connection to backend services
+4. **Limited Device Support**: Only devices in Management Hub catalog receive accurate pricing
+5. **Network Dependency**: Requires stable connection to Management Hub backend services
 6. **No Image Analysis**: Cannot analyze uploaded photos of device condition
 7. **Market Price Fluctuation**: Prices may not reflect current market conditions
-8. **Generic Repair Estimates**: Repair costs are estimated, not quotes from actual services
+8. **Hub-based Repair Estimates**: Repair costs come from Management Hub data, not live service quotes
 9. **No Warranty Integration**: Cannot account for remaining warranty value
 10. **Memory Storage Only**: No persistent storage of quotes or user preferences
 11. **Single Device Analysis**: Cannot compare multiple devices in one quote
 12. **No Authentication**: Cannot link quotes to user accounts for tracking
+13. **Management Hub Availability**: Feature depends on Management Hub API uptime and accessibility
