@@ -2,124 +2,152 @@
 
 ## Overview
 
-The Repair Solution feature is a Discord bot functionality that allows users to receive AI-powered diagnostic analysis and repair recommendations for their device issues through a guided thread-based interaction. The bot uses AI to analyze device symptoms and provide detailed repair solutions including part identification, difficulty assessment, and step-by-step guidance.
+The Repair Solution feature is a Discord bot functionality that provides users with detailed device repair guidance through a guided thread-based interaction. The bot uses a sophisticated two-step AI workflow with Groq and TogetherAI to analyze device symptoms, rewrite user queries for better understanding, and generate comprehensive repair solutions with step-by-step instructions.
+
+## AI Services Integration
+
+The bot uses a sophisticated two-step AI workflow:
+
+- **Step 1 - Query Rewriter (Groq)**: Analyzes and rewrites user device descriptions for better clarity and technical accuracy
+- **Step 2 - Repair Analysis (TogetherAI)**: Generates detailed repair solutions based on the rewritten query
+- **Purpose**: Provides accurate, actionable repair guidance with step-by-step instructions
+- **Processing**: Real-time AI analysis with animated status updates during processing
 
 ## Permission Requirements
 
-- Only users with premium access (role ID: 1324737846371815435) can use this feature
+- Available to all users (no premium access required)
 
 ## Flow Description
 
 ### 1. Initial Trigger
 
-- User visits the **🛠️│ʀᴇᴘᴀɪʀ-ʙᴏᴛ** channel (ID: 1366386159504330752)
-- Bot displays a welcome message with action buttons including "🔧 Repair Solutions"
+- User interacts with repair solution buttons in Discord channels
+- Bot displays repair solution options with action buttons
 
-### 2. Permission Check
-
-- When user clicks "🔧 Repair Solutions" button, the bot performs permission validation:
-  - Checks if user is bot owner (automatic access)
-  - If not owner, validates premium role membership
-  - If no premium access, displays premium required message and stops
-
-### 3. Thread Creation
+### 2. Thread Creation
 
 - Bot creates a private thread named `{username}'s Repair Solution`
-- Thread auto-archives after 60 minutes of inactivity
+- Thread auto-archives after configured duration (THREAD_AUTO_ARCHIVE_DURATION)
 - Bot responds with ephemeral message containing clickable link to the thread
 
-### 4. Guidance Display
+### 3. Guidance Display
 
 - Bot posts welcome message in the thread mentioning the user
-- Displays guidance embed with blue color (0x3498db) containing:
-  - **Title**: "Repair Solution Guidance"
-  - **Description**: Instructions for describing device issues
+- Displays guidance embed with blue color containing:
+  - **Title**: From REPAIR_SOLUTION["embed_title"]
+  - **Description**: Instructions for providing device symptoms and issues
   - **Footer**: "Type your details in this thread. I'll process your message automatically."
 
-### 5. Issue Description Collection
+### 4. Device Issue Collection
 
-- User types their device issue description in any format they prefer
+- User types their device symptoms, issues, and repair questions
 - Bot validates:
-  - Message is from thread owner (original user)
-  - Thread is not already processing another request
+  - Message is not from a bot
+  - Message is in a thread
+  - Thread name contains "Repair Solution"
 - Bot adds ✅ reaction to acknowledge message receipt
-- Bot stores message in thread tracking data
+- Bot stores message in thread tracking data with status "collecting"
 
-### 6. Repair Analysis Process
+### 5. Repair Analysis Process
 
-#### 6.1 Processing Initiation
+#### 5.1 Processing Initiation
 - Bot displays: "Analyzing your device symptoms and generating repair solutions..."
-- Bot shows typing indicator during analysis
+- Bot prepares for two-step AI analysis workflow
 
-#### 6.2 AI Service Validation
-- Checks if AI service (OpenAI) is available and configured
-- If unavailable, displays configuration error message
+#### 5.2 Step 1: Query Rewriting (Groq)
+- Uses QueryRewriter service to analyze and improve the user's device description
+- Extracts and clarifies:
+  - Device model and specifications
+  - Specific symptoms and issues
+  - Technical terminology standardization
+  - Context enhancement for better repair analysis
 
-#### 6.3 AI Analysis and Solution Generation
-- Sends issue description to AI service with specialized repair prompts
-- AI processes the input to generate:
-  - Device model identification
-  - Issue diagnosis and root cause analysis
-  - Specific part recommendations for replacement
-  - Difficulty assessment (Easy, Moderate, Difficult)
-  - Detailed repair instructions and guidance
-  - Safety considerations and professional recommendations
+#### 5.3 Processing Status Animation
+- Displays animated processing embed with:
+  - Initial processing message
+  - Rewritten question display
+  - Rotating status messages every 3 seconds
+  - Entertaining progress indicators
 
-### 7. Response Delivery
+#### 5.4 Step 2: Repair Solution Generation (TogetherAI)
+- Uses RepairSolutionService to generate comprehensive repair guidance
+- Analyzes the rewritten query for:
+  - Root cause identification
+  - Repair difficulty assessment
+  - Required tools and parts
+  - Step-by-step repair instructions
+  - Safety warnings and precautions
 
-#### 7.1 Repair Solution Embed (Blue color - 0x3498db)
-**Content Structure:**
-- **Title**: "Repair Solution Analysis"
-- **Description**: Comprehensive repair analysis including:
-  - **Device Identification**: Confirmed or suggested device model
-  - **Issue Diagnosis**: Root cause analysis of the reported symptoms
-  - **Recommended Parts**: Specific components that likely need replacement
-  - **Difficulty Level**: Assessment of repair complexity
-  - **Step-by-step Instructions**: Detailed repair guidance
-  - **Tools Required**: List of necessary tools and equipment
-  - **Safety Warnings**: Important precautions and considerations
-  - **Professional Recommendations**: When to seek professional help
+#### 5.5 Solution Formatting
+- Creates diagnosis embed using RepairSolutionFormatter
+- Includes:
+  - Original user question
+  - Rewrite analysis results
+  - Detailed troubleshoot results
+  - Visual formatting with appropriate colors
 
-**Footer**: "This analysis is based on the provided description and may not be 100% accurate. Always consult with a professional for complex repairs."
+### 6. Response Delivery
 
-### 8. Thread Completion
+#### 6.1 Processing Animation Management
+- Cancels animated status updates when analysis completes
+- Deletes processing message to clean up thread
 
-- Displays "Your repair solution is ready! You can close this thread when you're done."
-- Removes thread from internal tracking dictionary
-- Thread remains available for user review until auto-archived
+#### 6.2 Main Repair Solution Embed
+**Device Analysis Section:**
+- Original issue description
+- Rewritten technical analysis
+- Identified problems and symptoms
 
-### 9. Error Handling
+**Repair Guidance:**
+- Step-by-step repair instructions
+- Required tools and parts list
+- Difficulty level assessment
+- Safety warnings and precautions
+- Alternative solutions if applicable
 
-- **Thread creation errors**: Shows generic error message and suggests retry
-- **AI service unavailable**: Displays OpenAI configuration guidance
-- **Analysis errors**: Shows generic AI error response
-- **Failed reactions**: Silently ignored to prevent blocking flow
+**Footer**: Standard repair disclaimer and safety notice
+
+#### 6.3 Thread Completion
+- Sends completion message: "Your repair solution is ready! You can close this thread when you're done."
+- Removes thread from tracking system
+- Thread remains open for user reference
+
+### 7. Error Handling
+
+- **AI Service Unavailable**: Shows connection error with retry suggestion
+- **Query Rewriting Errors**: Falls back to original description
+- **Repair Analysis Errors**: Shows error embed with manual assistance offer
+- **Processing Errors**: Graceful error handling with user-friendly messages
 
 ## Mermaid Flow Diagram
 
 ```mermaid
 graph TD
-    A[User clicks 🔧 Repair Solutions] --> B{Premium Access?}
-    B -->|No| C[Show premium required]
-    B -->|Yes| D[Create private thread]
-    D --> E[Display guidance embed]
-    E --> F[User describes device issue]
-    F --> G[Add ✅ reaction]
-    G --> H[Show analyzing message]
-    H --> I[Show typing indicator]
-    I --> J{AI Service Available?}
-    J -->|No| K[Show config error]
-    J -->|Yes| L[Send to AI for analysis]
-    L --> M[Analyze device symptoms]
-    M --> N[Identify root cause]
-    N --> O[Generate part recommendations]
-    O --> P[Assess repair difficulty]
-    P --> Q[Create step-by-step instructions]
-    Q --> R[Add safety considerations]
-    R --> S[Create repair solution embed]
-    S --> T[Send solution to user]
-    T --> U[Thread ready message]
-    U --> V[Clean up thread tracking]
+    A[User describes device issue] --> B[Create private thread]
+    B --> C[Display guidance embed]
+    C --> D[User provides device symptoms]
+    D --> E[Add ✅ reaction]
+    E --> F[Show analyzing message]
+    F --> G[Display processing embed]
+    G --> H[Step 1: Rewrite query with Groq]
+    H --> I[Update embed with rewritten question]
+    I --> J[Start animated status updates]
+    J --> K[Step 2: Generate repair solution with TogetherAI]
+    K --> L[Cancel animation task]
+    L --> M[Delete processing message]
+    M --> N[Create diagnosis embed]
+    N --> O[Send repair solution]
+    O --> P[Send completion message]
+    P --> Q[Remove from thread tracking]
+    Q --> R[Thread available for reference]
+
+    H --> S{Query rewrite error?}
+    S -->|Yes| T[Use original description]
+    T --> K
+
+    K --> U{Repair analysis error?}
+    U -->|Yes| V[Send error embed]
+    V --> P
 ```
 
 ## Message Templates
@@ -127,81 +155,81 @@ graph TD
 ### Guidance Content
 
 ```
-Please describe your device issue in this thread, including:
+Tell us about your device issue or repair question:
 
-1. Your device model (e.g., iPhone 11, iPhone 14 Pro Max)
+🔧 **Device Information:**
+• Brand, model, and storage (e.g., iPhone 15 Pro 256GB)
+• Specific symptoms or problems you're experiencing
 
-2. The issue you're experiencing (e.g., power button not working, battery draining fast)
+🛠️ **Issue Details:**
+• When did the problem start?
+• What were you doing when it occurred?
+• Any error messages or unusual behavior
+• Previous repair attempts
 
-**Example:** iPhone 11 power button not working
+The more details you provide, the more accurate our repair guidance will be!
+
+**Note:** Our repair solutions are for informational purposes only. Always prioritize safety and consider professional repair services for complex issues.
 ```
 
 ### Thread Responses
 
 - **Processing acknowledgment**: `"Analyzing your device symptoms and generating repair solutions..."`
-- **Thread welcome**: `"{user_mention} Welcome! I'm here to help diagnose your device issues."`
-- **Completion**: `"Your repair solution is ready! You can close this thread when you're done."`
+- **Thread welcome**: `"{user_mention} Tell us about your device issue in the next message.\n\nYou can refer to the guidance below for more details."`
+- **Completion message**: `"Your repair solution is ready! You can close this thread when you're done."`
 
-### Footer Text
+### Processing Status Messages
 
-- **Analysis disclaimer**: `"This analysis is based on the provided description and may not be 100% accurate. Always consult with a professional for complex repairs."`
+- Animated status indicators during AI processing
+- Rewritten question display for transparency
+- Progress updates every 3 seconds
 
 ## Example User Inputs and Expected Responses
 
-### Example 1: Common Hardware Issue
+### Example 1: Screen Issue
 
 **User Input**:
 ```
-iPhone 12 power button not working. It used to be sticky and now it doesn't respond at all.
-Sometimes I can turn the screen on using assistive touch but the physical button is dead.
+iPhone 13 Pro screen is flickering and has weird colors sometimes. Started after I dropped it last week. Touch still works but display is messed up.
 ```
 
 **Bot Response**:
 1. ✅ reaction on message
 2. "Analyzing your device symptoms and generating repair solutions..."
-3. **Repair Solution Analysis** (Blue embed):
-   ```
-   **Device Model:** iPhone 12
+3. **Processing embed** with animated status updates
+4. **Repair Solution Embed**:
+   - **Original Issue**: User's description
+   - **Rewritten Analysis**: Technical breakdown of display issues
+   - **Repair Guidance**: Step-by-step screen replacement instructions
+   - **Tools Required**: Specific tools and parts needed
+   - **Safety Warnings**: Precautions for display repair
+5. "Your repair solution is ready! You can close this thread when you're done."
 
-   **Issue Diagnosis:**
-   Based on your description, the power button (also known as the side button) on your iPhone 12 has likely failed due to internal component wear or debris accumulation. The progression from "sticky" to completely unresponsive suggests mechanical failure of the button assembly.
+### Example 2: Power Button Issue (Actual Bot Output)
 
-   **Recommended Parts:**
-   • iPhone 12 Power Button Flex Cable Assembly
-   • Power Button Metal Bracket (if damaged)
+**User Input**:
+```
+iPhone 11 power button not working
+```
 
-   **Difficulty Level:** Moderate
+**Bot Response**:
+1. ✅ reaction on message
+2. "Analyzing your device symptoms and generating repair solutions..."
+3. **Repair Solution Analysis** (as shown below):
 
-   **Step-by-Step Instructions:**
-   1. Power off the device completely
-   2. Remove the two pentalobe screws near the Lightning port
-   3. Use a suction cup and opening picks to separate the display
-   4. Disconnect the battery connector first for safety
-   5. Remove screws securing the power button flex cable
-   6. Carefully lift out the old power button assembly
-   7. Install the new power button flex cable
-   8. Reassemble in reverse order, ensuring all connectors are secure
+![Repair Solution Output Example](repair_solution_output.png)
 
-   **Tools Required:**
-   • Pentalobe P2 screwdriver
-   • Phillips #000 screwdriver
-   • Plastic opening picks
-   • Suction cup
-   • Spudger tool
-   • Anti-static wrist strap (recommended)
+*Figure: Actual repair solution output showing component analysis, diagnosis, and repair recommendations for iPhone 11 power button issue*
 
-   **Safety Warnings:**
-   ⚠️ Always disconnect the battery before working on internal components
-   ⚠️ Use anti-static protection to prevent component damage
-   ⚠️ Take photos during disassembly to aid reassembly
+The bot provides:
+- **Issue**: Clear problem identification
+- **Analyzed Components**: Power Button, Power Button Flex Cable, Volume Control Flex Cable with likelihood assessments
+- **Diagnosis**: Identifies faulty component and replacement part needed
+- **Conclusion**: Detailed technical explanation of the root cause
+- **Additional Recommendations**: Software troubleshooting steps to try first
+- **Visual Component**: Image showing the actual power button flex cable part
 
-   **Professional Recommendation:**
-   This repair requires precise handling of delicate flex cables. If you're not comfortable with micro-electronics repair, consider having this done by a certified technician. The repair typically costs $80-120 at a professional shop.
-   ```
-   - **Footer**: "This analysis is based on the provided description and may not be 100% accurate. Always consult with a professional for complex repairs."
-4. "Your repair solution is ready! You can close this thread when you're done."
-
-### Example 2: Software-Related Issue
+### Example 3: Battery Problem
 
 **User Input**:
 ```
@@ -251,7 +279,7 @@ even when I'm not using it much. Started happening after the last update.
    ```
 4. "Your repair solution is ready! You can close this thread when you're done."
 
-### Example 3: Vague Description
+### Example 4: Vague Description
 
 **User Input**:
 ```
@@ -297,7 +325,7 @@ my phone is broken
    ```
 4. "Your repair solution is ready! You can close this thread when you're done."
 
-### Example 4: Complex Multi-Issue Problem
+### Example 5: Water Damage
 
 **User Input**:
 ```
@@ -356,7 +384,7 @@ doesn't work, and speakers sound muffled. It still turns on but camera app crash
    ```
 4. "Your repair solution is ready! You can close this thread when you're done."
 
-### Example 5: AI Service Unavailable
+### Example 6: AI Service Unavailable
 
 **User Input**: Valid device issue when OpenAI is not configured
 
@@ -365,7 +393,7 @@ doesn't work, and speakers sound muffled. It still turns on but camera app crash
 2. "Analyzing your device symptoms and generating repair solutions..."
 3. Generic OpenAI error message with configuration guidance
 
-### Example 6: Preventive Maintenance Question
+### Example 7: Preventive Maintenance Question
 
 **User Input**:
 ```
@@ -425,17 +453,37 @@ When do iPhone batteries typically need replacement?
    ```
 4. "Your repair solution is ready! You can close this thread when you're done."
 
+## Technical Implementation Details
+
+### Thread Management
+- **Class-level tracking**: `RepairSolutionHandler.threads = {}`
+- **Service initialization**: Lazy loading of `RepairSolutionService`
+- **Status tracking**: Thread status management for message processing
+- **Cleanup**: Automatic thread removal after solution delivery
+
+### AI Workflow
+- **Query Rewriter**: Groq-based query improvement
+- **Repair Analysis**: TogetherAI-based solution generation
+- **Processing Animation**: Async status updates with cancellation handling
+- **Error Recovery**: Graceful fallbacks for each AI step
+
+### Message Processing
+- **Single-shot processing**: Each user message triggers complete analysis
+- **No follow-up support**: Thread closes after solution delivery
+- **Reaction acknowledgment**: ✅ emoji for user feedback
+- **Clean completion**: Thread tracking cleanup after processing
+
 ## Current Limitations
 
-1. **AI Dependency**: Requires OpenAI API configuration to function
-2. **Single Analysis Per Thread**: Each thread processes one issue analysis cycle
-3. **No Image Analysis**: Cannot analyze uploaded photos of device damage
-4. **No Interactive Diagnosis**: No follow-up questions for clarification
-5. **No Parts Integration**: No direct ordering or availability checking for recommended parts
-6. **General Recommendations**: Cannot account for specific device history or previous repairs
-7. **No Professional Network**: No integration with local repair shop finder or booking
-8. **Accuracy Limitations**: AI analysis may not be 100% accurate for complex issues
-9. **No Warranty Tracking**: Cannot check if device is under warranty or covered repairs
-10. **Memory Storage Only**: No persistent storage of repair history or user preferences
-11. **No Cost Estimates**: Cannot provide real-time pricing for parts or labor
-12. **Safety Liability**: Users perform repairs at their own risk without professional oversight
+1. **No Follow-up Support**: Unlike pre-purchase inspection, threads don't support additional questions
+2. **Single Analysis**: Each message triggers a complete new analysis workflow
+3. **AI Service Dependency**: Requires both Groq and TogetherAI services to be available
+4. **No Image Analysis**: Cannot analyze uploaded photos of device damage
+5. **Safety Responsibility**: Repair guidance is informational only, not professional advice
+6. **No Progress Tracking**: Cannot track if users successfully completed repairs
+7. **Memory Storage Only**: No persistent storage of repair solutions
+8. **No Difficulty Filtering**: Cannot filter solutions by user skill level
+9. **No Parts Sourcing**: Cannot provide specific vendor or pricing information for parts
+10. **No Video Integration**: Cannot provide visual repair demonstrations
+11. **No Success Validation**: Cannot verify if provided solutions worked
+12. **Service Integration**: Requires both AI services to be properly configured and accessible

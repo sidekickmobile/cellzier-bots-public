@@ -12,7 +12,7 @@ The bot integrates with the backend market data API for real-time pricing inform
 - **Endpoint**: `/api/market-data/`
 - **Purpose**: Retrieves current market pricing data from eBay and marketplace listings
 - **Data Source**: Real-time scraping and analysis of marketplace listings
-- **Parameters**: Device model, storage capacity, and condition grade (optional)
+- **Parameters**: Device model, storage capacity, condition grade (optional), and location (optional)
 
 ## Permission Requirements
 
@@ -49,14 +49,28 @@ The bot integrates with the backend market data API for real-time pricing inform
 - Bot adds ✅ reaction to acknowledge message receipt
 - Bot stores message in thread tracking data
 
-### 5. Market Analysis Process
+### 5. Location Selection Process
 
-#### 5.1 Processing Initiation
+#### 5.1 Location Selection Display
+- After collecting device information, bot displays location selection UI
+- **Location Selection Title**: "📍 Select Your Location"
+- **Description**: "Please select your location to get more accurate market data. This helps us filter marketplace ads relevant to your area."
+- **Options**: Adelaide, Brisbane, Gold Coast, Melbourne, Newcastle, Perth, Sunshine Coast, Sydney, Darwin, Other
+- **Skip Option**: User can skip location selection if preferred
+
+#### 5.2 Location Processing
+- If location selected: Filter marketplace ads based on selected region
+- If "Other" or skipped: Use national marketplace data without location filtering
+- Location data sent to backend API for region-specific market analysis
+
+### 6. Market Analysis Process
+
+#### 6.1 Processing Initiation
 - **First message**: "Analyzing market data for your device..."
 - **Follow-up messages**: "Collecting additional device information..."
 - Bot combines all user messages into comprehensive device description
 
-#### 5.2 Device Information Extraction
+#### 6.2 Device Information Extraction
 - Uses regex-based parsing to extract structured device information:
   - **Model identification**: iPhone patterns (iPhone 12, iPhone 13 Pro Max, etc.)
   - **Storage capacity**: GB/TB patterns (128GB, 256GB, 512GB, 1TB)
@@ -64,14 +78,14 @@ The bot integrates with the backend market data API for real-time pricing inform
   - **Explicit grade**: A+, A, B, C, D grades if provided by user
   - **Raw description**: Original user input for AI analysis
 
-#### 5.3 Input Normalization
+#### 6.3 Input Normalization
 - Normalizes various input formats:
   - `iphone13promax` → `iPhone 13 Pro Max`
   - `256g` → `256GB`
   - `1t` → `1TB`
 - Handles spaced storage units and abbreviations
 
-#### 5.4 Device Grading Assessment
+#### 6.4 Device Grading Assessment
 - **Explicit Grade Priority**: Uses user-provided grades (A+, A, B, C, D) if available
 - **AI Grading Fallback**: Uses GradingService with combined grading method for automatic assessment
 - **Grade Meanings**:
@@ -81,14 +95,15 @@ The bot integrates with the backend market data API for real-time pricing inform
   - **C**: Fair Condition
   - **D**: Poor Condition
 
-#### 5.5 Market Data Retrieval
+#### 6.5 Market Data Retrieval
 - **API Integration**: Calls backend `/api/market-data/` endpoint
-- **Parameters**: Model, storage, and grade (if available)
+- **Parameters**: Model, storage, grade (if available), and location (if provided)
+- **Location Filtering**: If location provided, filters marketplace ads for relevant region
 - **Data Sources**: eBay and marketplace listing statistics
 - **Search Strategy**: Searches with grade if provided, otherwise searches across all grades
 - **Error Handling**: Graceful fallback for API connectivity issues
 
-#### 5.6 Market Value Calculation
+#### 6.6 Market Value Calculation
 - **Price Analysis**: Extracts price data from backend statistics
 - **Median Calculation**: Calculates median prices from eBay and marketplace data
 - **Final Estimate Methods**:
@@ -97,16 +112,18 @@ The bot integrates with the backend market data API for real-time pricing inform
   3. **No Data**: Returns appropriate error message
 - **Range Estimation**: Provides price range based on data availability
 
-### 6. Response Delivery
+### 7. Response Delivery
 
-#### 6.1 Initial Response
-- Displays: "**Market evaluation based on:** {user_device_description}"
+#### 7.1 Initial Response
+- Displays: "**Market evaluation based on:** {user_device_description} (Location: {location})" if location provided
+- Otherwise: "**Market evaluation based on:** {user_device_description}"
 
-#### 6.2 Main Market Evaluation Embed (Color varies by data availability)
+#### 7.2 Main Market Evaluation Embed (Color varies by data availability)
 **Device Information Section:**
 - Model, storage capacity
 - Assessed condition grade (explicit or AI-determined)
 - Battery percentage (if provided)
+- Location (if provided and not "Other")
 
 **Market Value Estimation:**
 - **💵 Estimated Market Value**: Best estimate price or price range
@@ -122,11 +139,11 @@ The bot integrates with the backend market data API for real-time pricing inform
 
 **Footer**: "Market estimates are based on current comparable listings and may vary."
 
-#### 6.3 Interactive Elements
+#### 7.3 Interactive Elements
 - **🔄 Request Re-evaluation**: Button to request more detailed analysis
 - **💡 Get Selling Tips**: Provides personalized selling recommendations based on device condition and market data
 
-### 7. Follow-up Interaction Support
+### 8. Follow-up Interaction Support
 
 - Thread remains open for additional questions and clarifications
 - Users can provide more details to refine market estimates
@@ -137,7 +154,7 @@ The bot integrates with the backend market data API for real-time pricing inform
   - All previous messages are combined for comprehensive analysis
   - Thread status is properly reset to continue accepting messages
 
-### 8. Error Handling
+### 9. Error Handling
 
 - **Backend API unavailable**: Shows connection error with retry suggestion
 - **Device not found**: Provides guidance for providing more details
@@ -160,20 +177,26 @@ graph TD
     I -->|Yes| J[Request additional information]
     I -->|No| K[Grade device]
     J --> D
-    K --> L[Call backend market data API]
-    L --> M{Market data found?}
-    M -->|Yes| N[Calculate market estimate]
-    M -->|No| O[Show no data found message]
-    N --> P[Create market evaluation embed]
-    O --> P
-    P --> Q[Add interactive view with buttons]
-    Q --> R[Send market evaluation]
-    R --> S[Reset thread status to collecting]
-    S --> T[Prompt for follow-up questions]
-    T --> U{User asks follow-up?}
-    U -->|Yes| V[Process additional info and combine with previous messages]
-    U -->|No| W[Thread remains open]
-    V --> F
+    K --> L[Show location selection UI]
+    L --> M{User selects location?}
+    M -->|Yes| N[Set location parameter]
+    M -->|Skip| O[Continue without location]
+    N --> P[Call backend market data API with location]
+    O --> Q[Call backend market data API without location]
+    P --> R{Market data found?}
+    Q --> R
+    R -->|Yes| S[Calculate market estimate]
+    R -->|No| T[Show no data found message]
+    S --> U[Create market evaluation embed]
+    T --> U
+    U --> V[Add interactive view with buttons]
+    V --> W[Send market evaluation]
+    W --> X[Reset thread status to collecting]
+    X --> Y[Prompt for follow-up questions]
+    Y --> Z{User asks follow-up?}
+    Z -->|Yes| AA[Process additional info and combine with previous messages]
+    Z -->|No| BB[Thread remains open]
+    AA --> F
 ```
 
 ## Message Templates
@@ -332,14 +355,48 @@ What if the battery was only 70%?
    - Lower estimated value due to battery condition
    - Updated selling tips reflecting battery concern
 
-### Example 6: Backend API Error
+### Example 6: Location Selection Process
+
+**User Input**:
+```
+iPhone 13 Pro Max 256GB, good condition, 85% battery, minor scratches on back
+```
+
+**Bot Response**:
+1. ✅ reaction on message
+2. "Analyzing market data for your device..."
+3. **📍 Select Your Location** (Blue embed with dropdown):
+   - **Description**: "Please select your location to get more accurate market data. This helps us filter marketplace ads relevant to your area."
+   - **Dropdown options**: Adelaide, Brisbane, Gold Coast, Melbourne, Newcastle, Perth, Sunshine Coast, Sydney, Darwin, Other
+   - **Skip button**: "⏭️ Skip Location"
+   - **Footer**: "You can skip this step if you prefer not to specify your location."
+
+**User selects "Sydney"**:
+4. Ephemeral message: "📍 Location selected: **Sydney**\n\nNow generating your market evaluation with location-filtered data..."
+5. **💰 Market Value Estimation: iPhone 13 Pro Max 256GB** (Green embed):
+   - **📱 Device Information**:
+     ```
+     Model: iPhone 13 Pro Max
+     Storage: 256GB
+     Grade: B (Good Condition) [AI assessed]
+     Battery: 85%
+     Location: Sydney
+     ```
+   - **💵 Estimated Market Value**:
+     ```
+     $850 - $950
+     Best estimate: $900
+     ```
+
+### Example 7: Backend API Error
 
 **User Input**: Valid device description when backend API is unavailable
 
 **Bot Response**:
 1. ✅ reaction on message
 2. "Analyzing market data for your device..."
-3. **❌ Estimation Error**: "Unable to connect to market data service. Please try again later."
+3. Location selection (if not skipped)
+4. **❌ Estimation Error**: "Unable to connect to market data service. Please try again later."
 
 ## Interactive Features
 
@@ -373,7 +430,7 @@ Start at $850 and be willing to negotiate
 3. **Market Data Coverage**: Limited to devices with sufficient marketplace listings
 4. **Estimation Accuracy**: Prices are estimates based on listings, not guaranteed selling prices
 5. **Grade Subjectivity**: AI grading may not match actual device condition assessment
-6. **Regional Variations**: Market data may not reflect local market conditions
+6. **Regional Coverage**: Location filtering available for major Australian cities; some regional areas may still use national data
 7. **Time Sensitivity**: Market prices fluctuate, estimates may become outdated
 8. **No Image Analysis**: Cannot analyze uploaded photos for condition assessment
 9. **Single Device Focus**: Cannot compare multiple devices in one evaluation
