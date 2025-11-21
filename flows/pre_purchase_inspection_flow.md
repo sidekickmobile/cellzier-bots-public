@@ -8,7 +8,7 @@ The Pre Purchase Inspection feature is a Discord bot functionality that allows u
 
 The bot integrates with the Cellzier Management Hub, a web-based dashboard that provides device catalog management and pricing data:
 
-- **Management Hub URL**: `https://zrlwzphylf.execute-api.ap-southeast-2.amazonaws.com/admin/devices`
+- **Management Hub URL**: `https://cellzier.sidekickmobile.com.au/admin/devices`
 - **Purpose**: Centralized device catalog with pricing tiers and fault repair cost data
 - **Data Source**: Contains device models, condition-based pricing, and repair cost estimates
 - **Access**: Backend API integration for real-time pricing retrieval
@@ -57,10 +57,12 @@ The bot integrates with the Cellzier Management Hub, a web-based dashboard that 
 ### 6. Pricing Analysis Process
 
 #### 6.1 Processing Initiation
+
 - Bot displays: "Analyzing your device information and generating pricing quote..."
 - Bot combines all user messages into comprehensive device description
 
 #### 6.2 AI Device Information Extraction
+
 - Uses AI to extract structured device information:
   - Brand identification (Apple, Samsung, etc.)
   - Model identification (iPhone 15 Pro, Galaxy S24, etc.)
@@ -70,8 +72,9 @@ The bot integrates with the Cellzier Management Hub, a web-based dashboard that 
   - Specific faults and issues mentioned
 
 #### 6.3 Device Catalog Search
+
 - Searches backend device catalog using extracted information via Management Hub API
-- **API Endpoint**: `https://zrlwzphylf.execute-api.ap-southeast-2.amazonaws.com/admin/devices`
+- **API Endpoint**: `https://cellzier.sidekickmobile.com.au/admin/devices`
 - Attempts to find matching device with pricing data from the management dashboard
 - Retrieves condition-based pricing tiers and fault repair costs stored in the hub
 - Accesses comprehensive fault data for each device model including:
@@ -84,6 +87,7 @@ The bot integrates with the Cellzier Management Hub, a web-based dashboard that 
 - Handles catalog connection errors and device not found scenarios
 
 #### 6.4 Condition Assessment
+
 - Uses AI to assess device condition against standard tiers:
   - **Brand New**: Perfect condition, no issues
   - **New**: Excellent condition, minimal signs of use
@@ -94,6 +98,7 @@ The bot integrates with the Cellzier Management Hub, a web-based dashboard that 
   - **Damaged Non-Functional**: Physical damage and doesn't work
 
 #### 6.5 Pricing Calculations
+
 - Calculates three pricing scenarios:
   1. **AS IS Price**: Current condition value from catalog
   2. **FIXED Price**: Working condition value minus estimated repair costs
@@ -102,24 +107,30 @@ The bot integrates with the Cellzier Management Hub, a web-based dashboard that 
 ### 7. Response Delivery
 
 #### 7.1 Initial Response
+
 - Displays: "**Based on your description:** {user_device_description}"
 
 #### 7.2 Main Pricing Embed (Color varies by condition)
+
 **Device Information Section:**
+
 - Brand, model, storage capacity
 - Assessed condition tier
 
 **Pricing Scenarios:**
+
 - **💵 Sell to Us AS IS**: Immediate purchase price in current condition
 - **🔧 Sell to Us FIXED**: Price after user repairs device (includes repair cost estimate)
 - **🛠️ Our Repair Service**: Cost for professional repair service
 
 **AI Assessment (if available):**
+
 - Detailed reasoning for condition assessment and pricing
 
 **Footer**: "Prices are estimates and subject to physical inspection by our team."
 
 #### 7.3 Interactive Elements
+
 - View with additional actions for refined quotes or follow-up questions
 
 ### 8. Follow-up Interaction Support
@@ -209,6 +220,7 @@ The more details you provide, the more accurate our pricing quote will be!
 ### Example 1: Working Device with Minor Issues
 
 **User Input**:
+
 ```
 iPhone 14 Pro Max 256GB Space Black. Screen is perfect, back has minor scratches.
 Battery health is 89%. All features work fine. Considering selling because
@@ -216,6 +228,7 @@ I'm upgrading to iPhone 15.
 ```
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your device information and generating pricing quote..."
 3. **"Based on your description:** iPhone 14 Pro Max 256GB Space Black. Screen is perfect..."
@@ -256,12 +269,14 @@ I'm upgrading to iPhone 15.
 ### Example 2: Damaged Device with Multiple Issues
 
 **User Input**:
+
 ```
 Samsung Galaxy S22 Ultra 512GB. Screen is cracked but works. Back glass shattered.
 Camera seems fine but speakers sound muffled. Still charges and works overall.
 ```
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your device information and generating pricing quote..."
 3. **💰 Device Pricing Quote: Samsung Galaxy S22 Ultra 512GB** (Orange embed):
@@ -296,17 +311,19 @@ Camera seems fine but speakers sound muffled. Still charges and works overall.
      intact. Repair costs include screen replacement, back glass, and speaker
      service.
      ```
-5. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
+4. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
 
 ### Example 3: Dead Device
 
 **User Input**:
+
 ```
 iPhone 13 won't turn on at all. Dropped in water last month. Tried charging
 but no response. Screen looks fine but completely dead.
 ```
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your device information and generating pricing quote..."
 3. **💰 Device Pricing Quote: iPhone 13** (Red embed):
@@ -340,7 +357,7 @@ but no response. Screen looks fine but completely dead.
      unresponsiveness suggests logic board damage. Repair requires professional
      liquid damage restoration which may not guarantee success.
      ```
-5. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
+4. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
 
 **Screenshot Example:**
 ![Pre-Purchase Inspection Dead Device Example](pre_purchase_inspection_img1.png)
@@ -348,12 +365,14 @@ but no response. Screen looks fine but completely dead.
 ### Example 4: Device Not in Catalog
 
 **User Input**:
+
 ```
 Google Pixel 8a 128GB, mint condition. Just got Pixel 9 so selling this one.
 Perfect working order, no issues at all.
 ```
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your device information and generating pricing quote..."
 3. **💰 Device Pricing Quote: Google Pixel 8a 128GB** (Green embed):
@@ -369,16 +388,18 @@ Perfect working order, no issues at all.
      Device not found in catalog. Please contact our team for a manual
      assessment of this device model.
      ```
-5. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
+4. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
 
 ### Example 5: Vague Description
 
 **User Input**:
+
 ```
 old iPhone, kinda broken
 ```
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your device information and generating pricing quote..."
 3. **💰 Device Pricing Quote: iPhone** (Orange embed):
@@ -412,16 +433,18 @@ old iPhone, kinda broken
      Please provide iPhone model (e.g., iPhone 12, iPhone 13 Pro) and
      describe the specific issues for a detailed quote.
      ```
-5. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
+4. "💬 Feel free to ask any follow-up questions or provide additional information to refine the quote."
 
 ### Example 6: Follow-up Question
 
 **User Input** (after Example 1):
+
 ```
 What if the battery health was lower, like 75%?
 ```
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your additional information and updating the quote..."
 3. **Updated pricing quote** with adjusted scenarios:
@@ -434,6 +457,7 @@ What if the battery health was lower, like 75%?
 **User Input**: Valid device description when backend catalog is unavailable
 
 **Bot Response**:
+
 1. ✅ reaction on message
 2. "Analyzing your device information and generating pricing quote..."
 3. **❌ Pricing Error**: "Unable to connect to device catalog service. Please try again later."
